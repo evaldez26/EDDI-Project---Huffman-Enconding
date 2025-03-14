@@ -90,4 +90,87 @@ void Huffman::buildHuffmanTree(string texto)
     while (indice < (int)codigoBin.size() - 2) {//como empezamos en -1 el indice hacemos un -2 en el .size
         decode(raiz, indice, codigoBin);
     }
+
+    //parte para guardar en un archivo binario, obvio solo se ejecuta si se elige en el menu
+    ofstream archivo("huffman.bin", ios::binary);
+    if (!archivo) {
+        cerr << "Error al abrir el archivo para escritura." << endl;
+        return;
+    }
+
+    size_t tamanio = codigoBin.size();
+    archivo.write(reinterpret_cast<const char*>(&tamanio), sizeof(tamanio));
+    archivo.write(codigoBin.c_str(), tamanio);
+
+    guardarArbol(archivo, raiz);
+    archivo.close();
+
+}
+
+
+void Huffman::guardarArbol(ofstream& archivo, Nodo* nodo) { //solo sirve para guardar la estructura del arbol en el archivo binario
+    if (!nodo) {
+        archivo.put('#'); // indica nodo nulo
+        return;
+    }
+    archivo.put(nodo->getCh()); // guarda char
+    guardarArbol(archivo, nodo->getLeft());
+    guardarArbol(archivo, nodo->getRight());
+}
+
+void Huffman::cargarTexto(string nombreArchivoTexto) {
+    ifstream archivo(nombreArchivoTexto);
+    if (!archivo.is_open()) {
+        cerr << "Error al abrir el archivo." << endl;
+        return;
+    }
+    stringstream buffer;
+    buffer << archivo.rdbuf();
+
+    //directamente llama a build con el string obtenido del archivo de texto
+    buildHuffmanTree(buffer.str());
+}
+
+
+Nodo* Huffman::reconstruirArbol(ifstream& archivo) {
+    char ch;
+    archivo.get(ch);
+    if (!archivo || ch == '#') {
+        return nullptr; //nodo nulo
+    }
+    Nodo* nodo = new Nodo(ch, 0); //la frequencia no se ocupa
+    nodo->setLeft(reconstruirArbol(archivo));
+    nodo->setRight(reconstruirArbol(archivo));
+    return nodo;
+}
+
+
+void Huffman::cargarCodificado(string nombreArchivoBinario) {
+    ifstream archivo(nombreArchivoBinario, ios::binary);
+    if (!archivo) {
+        cerr << "Error al abrir el archivo para lectura." << endl;
+        return;
+    }
+
+    size_t tamanio;
+    archivo.read(reinterpret_cast<char*>(&tamanio), sizeof(tamanio));
+
+    string codigoBin(tamanio, '\0');
+    archivo.read(&codigoBin[0], tamanio);
+
+    //crea el arbol huffman
+    Nodo* raiz = reconstruirArbol(archivo);
+    archivo.close();
+
+    if (!raiz) {
+        cerr << "Error al reconstruir el arbol de Huffman." << endl;
+        return;
+    }
+
+    //decodifica el mensaje
+    int indice = -1;
+    cout << "\nDecoded string is:\n";
+    while (indice < (int)codigoBin.size() - 2) {
+        decode(raiz, indice, codigoBin);
+    }
 }
