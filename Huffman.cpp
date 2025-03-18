@@ -24,7 +24,7 @@ void Huffman::encode(Nodo* raiz, string str, unordered_map<char, string>& huffCo
 }
 
 void Huffman::decode(Nodo* raiz, int& indice, string str)
-{
+{//para el proceso cuando identifica un caracter 
     if (raiz == nullptr) {
         return; 
     }
