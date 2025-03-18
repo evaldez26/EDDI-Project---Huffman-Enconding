@@ -10,7 +10,7 @@ private:
 public:
     void encode(Nodo* raiz, string str, unordered_map<char, string>& huffCode);
     void decode(Nodo* raiz, int& indice, string str);
-    void buildHuffmanTree(string text);
+    void crearHuffmanTree(string text);
 
     void guardarArbol(ofstream& archivo, Nodo* nodo);
     void cargarTexto(string nombreArchivoTexto);
