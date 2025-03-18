@@ -8,10 +8,15 @@ using namespace std;
 int main()
 {
 
+Huffman huff;
+string text;
+cout << "Ingrese el texto: ";
+getline(cin, text);
+huff.crearHuffmanTree(text);
+
     //para probar cargar un archivo de texto creen uno con la frase que quieran y lo ponen en el directorio del proyecto, y ponen el nombre del archivo en el menu
     //si prueban cargar un archivo binario sin haber corrido el programa obvio les va a decir que hubo error, tienen que correrlo primero
 
-    Huffman huff;
     
     int opcion;
     cout << "Seleccione una opcion:\n";
@@ -32,7 +37,7 @@ int main()
         huff.cargarCodificado(nombreArchivoBinario);
     }
     else {
-        cout << "Opción no válida.\n";
+        cout << "OpciÃ³n no vÃ¡lida.\n";
     }
 
     return 0;
