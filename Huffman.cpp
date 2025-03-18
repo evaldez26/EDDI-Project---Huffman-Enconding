@@ -5,6 +5,7 @@ struct comp {//esto se puede poner como metodo, pero la logica es super mas comp
         if (left->getFreq() > right->getFreq()) {
             return true;
         }
+        
         return false;
     }
 };
@@ -24,13 +25,13 @@ void Huffman::encode(Nodo* raiz, string str, unordered_map<char, string>& huffCo
 }
 
 void Huffman::decode(Nodo* raiz, int& indice, string str)
-{//para el proceso cuando identifica un caracter 
+{
     if (raiz == nullptr) {
         return; 
     }
 
     if (raiz->isLeaf()) {
-        cout << raiz->getCh();
+        cout << raiz->getCh();//para el proceso cuando identifica un caracter 
         return;
     }
 
@@ -43,7 +44,7 @@ void Huffman::decode(Nodo* raiz, int& indice, string str)
     }
 }
 
-void Huffman::buildHuffmanTree(string texto)
+void Huffman::crearHuffmanTree(string texto)
 {
     unordered_map<char, int>frecuencias;//unordered_map es un hashmap que no ordena las claves
 
@@ -51,22 +52,22 @@ void Huffman::buildHuffmanTree(string texto)
         frecuencias[c]++;
     }
 
-    priority_queue<Nodo*, vector<Nodo*>, comp> pqueue;
+    priority_queue<Nodo*, vector<Nodo*>, comp> pqueue;//creamos una pqeueu para alamcenar los caracteres y usamos el comparador para que se ordene minheap
     for (auto pair : frecuencias) {
         pqueue.push(new Nodo(pair.first, pair.second));//anadimos a la pqueue el char y la frecuencia
     }
-
-    while (pqueue.size() > 1) {
+    while (pqueue.size() > 1) {//la pqueue size es de cuantos caracteres existen que no sean repetidos y se deja de leer cuando ya solo quede el padre
         Nodo* left = pqueue.top(); //.top() agarr el primer elemento de la pqueue
         pqueue.pop(); //elimina el primer elemento de la pqueue
         Nodo* right = pqueue.top();
         pqueue.pop();
+
         int sum = left->getFreq() + right->getFreq();
-        pqueue.push(new Nodo('\0', sum, left, right));//creamos el nodo con caracter nulo
+        pqueue.push(new Nodo('\0', sum, left, right));//creamos el nodo con caracter nulo (esto es como cuando creabamos Xo apuntando a otros caracteres)
     }
 
     Nodo* raiz = pqueue.top();//el ultimo nodo que se creo es la raiz
-    unordered_map<char, string> huffmanCode;
+    unordered_map<char, string> huffmanCode;//mapa para almacenar el caracter y su respectiva frecuencia
     encode(raiz, "", huffmanCode);
 
     cout << "Huffman Codes are:\n";
@@ -86,25 +87,9 @@ void Huffman::buildHuffmanTree(string texto)
 
     int indice = -1;
     cout << "\nDecoded string is:\n";
-    
     while (indice < (int)codigoBin.size() - 2) {//como empezamos en -1 el indice hacemos un -2 en el .size
         decode(raiz, indice, codigoBin);
     }
-
-    //parte para guardar en un archivo binario, obvio solo se ejecuta si se elige en el menu
-    ofstream archivo("huffman.bin", ios::binary);
-    if (!archivo) {
-        cerr << "Error al abrir el archivo para escritura." << endl;
-        return;
-    }
-
-    size_t tamanio = codigoBin.size();
-    archivo.write(reinterpret_cast<const char*>(&tamanio), sizeof(tamanio));
-    archivo.write(codigoBin.c_str(), tamanio);
-
-    guardarArbol(archivo, raiz);
-    archivo.close();
-
 }
 
 
