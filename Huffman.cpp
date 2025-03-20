@@ -112,13 +112,18 @@ void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
 void Huffman::guardarArbol(ofstream& archivo, Nodo* nodo) { //solo sirve para guardar la estructura del arbol en el archivo binario
     if (nodo==nullptr) {
         archivo.put('#'); //se usa '#' en lugar de '\0' para evitar problemas al leer el archivo ya que se puede confundir a leer el archivo
+        //esto se pone cuando se encuentra un caracter leaf y obviamente los nodos hijos son nulos
         return;
     }
-    archivo.put(nodo->getCh()); // guarda char
+    if (nodo->isLeaf()) {
+        archivo.put(nodo->getCh()); //guarda el char
+    }
+    else {
+        archivo.put('*'); //guarda el nodo interno q apunta a los demas caracteres o otros nodos internos hasta encontrar una hoja
+    }
     guardarArbol(archivo, nodo->getLeft());
     guardarArbol(archivo, nodo->getRight());
 }
-
 void Huffman::cargarTexto(string nombreArchivoTexto) {
     ifstream archivo(nombreArchivoTexto);
     if (!archivo.is_open()) {
