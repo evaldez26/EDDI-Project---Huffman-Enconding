@@ -5,7 +5,7 @@ struct comp {//esto se puede poner como metodo, pero la logica es super mas comp
         if (left->getFreq() > right->getFreq()) {
             return true;
         }
-        
+
         return false;
     }
 };
@@ -27,7 +27,7 @@ void Huffman::encode(Nodo* raiz, string str, unordered_map<char, string>& huffCo
 void Huffman::decode(Nodo* raiz, int& indice, string str)
 {
     if (raiz == nullptr) {
-        return; 
+        return;
     }
 
     if (raiz->isLeaf()) {
@@ -44,18 +44,21 @@ void Huffman::decode(Nodo* raiz, int& indice, string str)
     }
 }
 
-void Huffman::crearHuffmanTree(string texto)
+void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
 {
     unordered_map<char, int>frecuencias;//unordered_map es un hashmap que no ordena las claves
 
     for (char c : texto) {//Recorre el texo y entra cada vez que encuentre el mismo caracter
         frecuencias[c]++;
     }
-
     priority_queue<Nodo*, vector<Nodo*>, comp> pqueue;//creamos una pqeueu para alamcenar los caracteres y usamos el comparador para que se ordene minheap
     for (auto pair : frecuencias) {
         pqueue.push(new Nodo(pair.first, pair.second));//anadimos a la pqueue el char y la frecuencia
     }
+    if (pqueue.size() == 1) {//si solo hay un caracter en el texto
+		pqueue.push(new Nodo('\0', 1));//anadimos un caracter nulo
+	}
+
     while (pqueue.size() > 1) {//la pqueue size es de cuantos caracteres existen que no sean repetidos y se deja de leer cuando ya solo quede el padre
         Nodo* left = pqueue.top(); //.top() agarr el primer elemento de la pqueue
         pqueue.pop(); //elimina el primer elemento de la pqueue
@@ -72,30 +75,43 @@ void Huffman::crearHuffmanTree(string texto)
 
     cout << "Huffman Codes are:\n";
     for (auto pair : huffmanCode) {
-        cout << pair.first << " " << pair.second << '\n';//declaramos el codigo de cada caracter
+        if (pair.first != '\0') {
+            cout << pair.first << " " << pair.second << '\n';//declaramos el codigo de cada caracter
+        }
     }
 
     cout << "\nOriginal string was:\n" << texto << '\n';
 
-    
+
     string codigoBin = "";
     for (char ch : texto) {
         codigoBin += huffmanCode[ch];//recorremos carfacter por caracter para codificar todo unido el texto original
     }
 
     cout << "\nEncoded string is:\n" << codigoBin << '\n';
+    
+    nombreArchivo = nombreArchivo.substr(0, nombreArchivo.size() - 4);//quitamos la extension del archivo .txt
 
-    int indice = -1;
-    cout << "\nDecoded string is:\n";
-    while (indice < (int)codigoBin.size() - 2) {//como empezamos en -1 el indice hacemos un -2 en el .size
-        decode(raiz, indice, codigoBin);
+    ofstream archivo(nombreArchivo+".bin", ios::binary);//creamos un archivo binario con el nombre que tiene el archivo de texto 
+    if (!archivo) {
+        cerr << "Error al abrir el archivo para escritura." << endl;
+        return;
     }
+
+    size_t tamanio = codigoBin.size();
+    archivo.write(reinterpret_cast<const char*>(&tamanio), sizeof(tamanio));//escribimos en el archivo el tamanio del codigo binario
+    archivo.write(codigoBin.c_str(), tamanio);//escribimos en el archivo el codigo binario
+
+    guardarArbol(archivo, raiz);//guardamos el arbol en el archivo binario
+    archivo.close();
+
+    compararSizeArchivo(nombreArchivo + ".txt", nombreArchivo + ".bin");//comparamos el tamano del archivo de texto y el archivo binario
 }
 
 
 void Huffman::guardarArbol(ofstream& archivo, Nodo* nodo) { //solo sirve para guardar la estructura del arbol en el archivo binario
-    if (!nodo) {
-        archivo.put('#'); // indica nodo nulo
+    if (nodo==nullptr) {
+        archivo.put('#'); //se usa '#' en lugar de '\0' para evitar problemas al leer el archivo ya que se puede confundir a leer el archivo
         return;
     }
     archivo.put(nodo->getCh()); // guarda char
@@ -106,14 +122,15 @@ void Huffman::guardarArbol(ofstream& archivo, Nodo* nodo) { //solo sirve para gu
 void Huffman::cargarTexto(string nombreArchivoTexto) {
     ifstream archivo(nombreArchivoTexto);
     if (!archivo.is_open()) {
-        cerr << "Error al abrir el archivo." << endl;
+        cerr << "Error al abrir el archivo" << endl;
         return;
     }
-    stringstream buffer;
-    buffer << archivo.rdbuf();
+    stringstream buffer;//para almacenar el texto del archivo
+    buffer << archivo.rdbuf();//almacena el texto del archivo en el buffer
 
-    //directamente llama a build con el string obtenido del archivo de texto
-    buildHuffmanTree(buffer.str());
+    //directamente llama a crear el arbol con el string obtenido del archivo de texto
+    crearHuffmanTree(buffer.str(), nombreArchivoTexto);//convierte el buffer a string para poder crear el arbol con el contenido del texto
+    archivo.close();
 }
 
 
@@ -155,7 +172,27 @@ void Huffman::cargarCodificado(string nombreArchivoBinario) {
     //decodifica el mensaje
     int indice = -1;
     cout << "\nDecoded string is:\n";
-    while (indice < (int)codigoBin.size() - 2) {
+    while (indice < (int)codigoBin.size() - 2) {//como empezamos en -1 el indice hacemos un -2 en el .size
         decode(raiz, indice, codigoBin);
     }
+}
+
+void Huffman::compararSizeArchivo(string textFile, string binFile) {
+    ifstream archivoTxt(textFile, ios::ate);//ios::ate es para q se vaya directamente al final del archivo
+    if (!archivoTxt.is_open()) {
+        return;
+    }
+    ifstream archivoBin(binFile, ios::binary | ios::ate);
+    if (!archivoBin.is_open()) {
+		return;
+	}
+
+    streamsize sizeTxt = archivoTxt.tellg();//tellg() es para obtener el tamano del archivo y streamsize es para almacenar el tamano del archivo en bytes
+    streamsize sizeBin = archivoBin.tellg();//
+
+
+    cout << "\n\nEl texto original tiene un tamano de " << sizeTxt << " bytes";
+    cout << endl << "El archivo binario tiene un tamano de " << sizeBin << " bytes";
+    
+    cout << endl << "El radio de compresion es de " << (sizeBin / sizeTxt) * 100 << "%";
 }
