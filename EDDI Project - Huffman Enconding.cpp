@@ -5,6 +5,7 @@
 #include <queue>
 #include "Huffman.h"
 using namespace std;
+
 int main()
 {
     //para probar cargar un archivo de texto creen uno con la frase que quieran y lo ponen en el directorio del proyecto, y ponen el nombre del archivo en el menu
