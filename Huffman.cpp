@@ -98,12 +98,16 @@ void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
         return;
     }
 
-    //esto guarda los 0s y 1s de codigoBin como un vector de bytes y los guarda en el archivo binario
-    size_t tamanio = (codigoBin.size() + 7) / 8; // Número de bytes necesarios
-    archivo.write(reinterpret_cast<const char*>(&tamanio), sizeof(tamanio));
+    // Calcular el tamaño en bits
+    size_t tamanioBits = codigoBin.size(); // Número de bits necesarios
 
-    vector<uint8_t> bytes(tamanio, 0);
-    for (size_t i = 0; i < codigoBin.size(); ++i) {
+    // Guardar el tamaño en bits en el archivo
+    archivo.write(reinterpret_cast<const char*>(&tamanioBits), sizeof(tamanioBits));
+
+    // Convertir el código binario a un vector de bytes
+    vector<uint8_t> bytes((tamanioBits + 7) / 8, 0);  // Ajustar el tamaño de bytes
+
+    for (size_t i = 0; i < tamanioBits; ++i) {
         size_t byteIndex = i / 8;
         size_t bitIndex = 7 - (i % 8); // Coloca el bit en la posición correcta
         if (codigoBin[i] == '1') {
@@ -111,9 +115,12 @@ void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
         }
     }
 
+    // Escribir los bytes en el archivo
     archivo.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 
+    // Guardar el árbol de Huffman
     guardarArbol(archivo, raiz);
+
     archivo.close();
 
     compararSizeArchivo(nombreArchivo + ".txt", nombreArchivo + ".bin");
@@ -214,11 +221,15 @@ void Huffman::cargarCodificado(string nombreArchivoBinario) {
         return;
     }
 
-    size_t tamanio;
-    archivo.read(reinterpret_cast<char*>(&tamanio), sizeof(tamanio));
+    // Leer el tamaño en bits que se guardó en el archivo
+    size_t tamanioBits;
+    archivo.read(reinterpret_cast<char*>(&tamanioBits), sizeof(tamanioBits));
 
-    vector<uint8_t> bytes(tamanio);
-    archivo.read(reinterpret_cast<char*>(bytes.data()), tamanio);
+    // Calcular cuántos bytes necesitamos para almacenar estos bits
+    size_t tamanioBytes = (tamanioBits + 7) / 8; // Redondear hacia arriba para incluir cualquier byte incompleto
+
+    vector<uint8_t> bytes(tamanioBytes);
+    archivo.read(reinterpret_cast<char*>(bytes.data()), tamanioBytes);
 
     string codigoBin = "";
     for (size_t i = 0; i < bytes.size(); ++i) {
@@ -232,8 +243,10 @@ void Huffman::cargarCodificado(string nombreArchivoBinario) {
         }
     }
 
-    // Ahora tenemos el código binario, lo que debemos hacer es eliminar los bits sobrantes que no se usan.
-    codigoBin = codigoBin.substr(0, tamanio * 8);
+    // Ahora tenemos más bits de los necesarios, por lo que recortamos el código binario
+    codigoBin = codigoBin.substr(0, tamanioBits);
+
+    cout << endl << "codigoBin: " << codigoBin << endl;
 
     Nodo* raiz = reconstruirArbol(archivo);
     archivo.close();
@@ -249,6 +262,7 @@ void Huffman::cargarCodificado(string nombreArchivoBinario) {
         decode(raiz, indice, codigoBin);
     }
 }
+
 
 
 void Huffman::compararSizeArchivo(string textFile, string binFile) {
