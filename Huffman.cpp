@@ -294,6 +294,6 @@ void Huffman::compararSizeArchivo(string textFile, string binFile) {
 
     cout << "\n\nEl texto original tiene un tamano de " << intTxt << " bytes";
     cout << endl << "El archivo binario tiene un tamano de " << intBin << " bytes";
-
+	//fixed y setprecision para que solo hayan 2 digitos despues del decimal
     cout << endl << "El radio de compresion es de " << fixed << setprecision(2) << radio << "%";
 }
