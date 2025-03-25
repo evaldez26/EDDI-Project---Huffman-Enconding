@@ -26,6 +26,9 @@ void Huffman::encode(Nodo* raiz, string str, unordered_map<char, string>& huffCo
 
 void Huffman::decode(Nodo* raiz, int& indice, string str)
 {
+    //Hace que la consola use UTF-8 para el output y pueda mostrar caracteres especiales
+    SetConsoleOutputCP(65001);
+
     if (raiz == nullptr) {
         return;
     }
@@ -46,57 +49,60 @@ void Huffman::decode(Nodo* raiz, int& indice, string str)
 
 void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
 {
-    unordered_map<char, int> frecuencias;
+    //Hace que la consola use UTF-8 para el output y pueda mostrar caracteres especiales
+    SetConsoleOutputCP(65001);
+    unordered_map<char, int>frecuencias;//unordered_map es un hashmap que no ordena las claves
 
-    for (char c : texto) {
+    for (char c : texto) {//Recorre el texo y entra cada vez que encuentre el mismo caracter
         frecuencias[c]++;
     }
-
-    priority_queue<Nodo*, vector<Nodo*>, comp> pqueue;
+    priority_queue<Nodo*, vector<Nodo*>, comp> pqueue;//creamos una pqeueu para alamcenar los caracteres y usamos el comparador para que se ordene minheap
     for (auto pair : frecuencias) {
-        pqueue.push(new Nodo(pair.first, pair.second));
+        pqueue.push(new Nodo(pair.first, pair.second));//anadimos a la pqueue el char y la frecuencia
     }
-    if (pqueue.size() == 1) {
-        pqueue.push(new Nodo('\0', 1));
+    if (pqueue.size() == 1) {//si solo hay un caracter en el texto
+        pqueue.push(new Nodo('\0', 1));//anadimos un caracter nulo
     }
 
-    while (pqueue.size() > 1) {
-        Nodo* left = pqueue.top();
-        pqueue.pop();
+    while (pqueue.size() > 1) {//la pqueue size es de cuantos caracteres existen que no sean repetidos y se deja de leer cuando ya solo quede el padre
+        Nodo* left = pqueue.top(); //.top() agarr el primer elemento de la pqueue
+        pqueue.pop(); //elimina el primer elemento de la pqueue
         Nodo* right = pqueue.top();
         pqueue.pop();
 
         int sum = left->getFreq() + right->getFreq();
-        pqueue.push(new Nodo('\0', sum, left, right));
+        pqueue.push(new Nodo('\0', sum, left, right));//creamos el nodo con caracter nulo (esto es como cuando creabamos Xo apuntando a otros caracteres)
     }
 
-    Nodo* raiz = pqueue.top();
-    unordered_map<char, string> huffmanCode;
+    Nodo* raiz = pqueue.top();//el ultimo nodo que se creo es la raiz
+    unordered_map<char, string> huffmanCode;//mapa para almacenar el caracter y su respectiva frecuencia
     encode(raiz, "", huffmanCode);
 
-    cout << "Los codigos huffman son:\n";
+    cout << "Los codigos huffman:\n";
     for (auto pair : huffmanCode) {
         if (pair.first != '\0') {
-            cout << pair.first << " " << pair.second << '\n';
+            cout << pair.first << " " << pair.second << '\n';//declaramos el codigo de cada caracter
         }
     }
 
     cout << "\nLa cadena original es:\n" << texto << '\n';
 
+
     string codigoBin = "";
     for (char ch : texto) {
-        codigoBin += huffmanCode[ch];
+        codigoBin += huffmanCode[ch];//recorremos carfacter por caracter para codificar todo unido el texto original
     }
 
     cout << "\nLa cadena codificada es:\n" << codigoBin << '\n';
 
-    nombreArchivo = nombreArchivo.substr(0, nombreArchivo.size() - 4);
+    nombreArchivo = nombreArchivo.substr(0, nombreArchivo.size() - 4);//quitamos la extension del archivo .txt
 
-    ofstream archivo(nombreArchivo + ".bin", ios::binary);
+    ofstream archivo(nombreArchivo + ".bin", ios::binary);//creamos un archivo binario con el nombre que tiene el archivo de texto 
     if (!archivo) {
         cerr << "Error al abrir el archivo para escritura." << endl;
         return;
     }
+
 
     // Calcular el tamaño en bits
     size_t tamanioBits = codigoBin.size(); // Número de bits necesarios
@@ -278,9 +284,15 @@ void Huffman::compararSizeArchivo(string textFile, string binFile) {
     streamsize sizeTxt = archivoTxt.tellg();//tellg() es para obtener el tamano del archivo y streamsize es para almacenar el tamano del archivo en bytes
     streamsize sizeBin = archivoBin.tellg();//
 
+    //convertir los streamsize a int
+    int intTxt = static_cast<int>(sizeTxt);
+    int intBin = static_cast<int>(sizeBin);
 
-    cout << "\n\nEl texto original tiene un tamano de " << sizeTxt << " bytes";
-    cout << endl << "El archivo binario tiene un tamano de " << sizeBin << " bytes";
-    
-    cout << endl << "El radio de compresion es de " << (sizeBin / sizeTxt) * 100 << "%";
+    //convertimos a double todo porque si no se redondea a 0 en algunos casos
+    double radio = ((double)intBin / (double)intTxt) * 100;
+
+    cout << "\n\nEl texto original tiene un tamano de " << intTxt << " bytes";
+    cout << endl << "El archivo binario tiene un tamano de " << intBin << " bytes";
+
+    cout << endl << "El radio de compresion es de " << radio << "%";
 }

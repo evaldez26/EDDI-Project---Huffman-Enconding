@@ -1,6 +1,7 @@
 #pragma once
 #include <fstream>
 #include <sstream>
+#include <windows.h>
 #include "Nodo.h"
 using namespace std;
 class Huffman
