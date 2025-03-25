@@ -1,4 +1,5 @@
 #include "Huffman.h"
+#include <iomanip>
 
 struct comp {//esto se puede poner como metodo, pero la logica es super mas compleja. Tambien se puede poner como clase pero no sabia se crear una clase por un metodo.
     bool operator()(Nodo* left, Nodo* right) {//metodo para que el nodo con menor frecuencia vaya primero en la pqueue
@@ -104,18 +105,18 @@ void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
     }
 
 
-    // Calcular el tamaño en bits
-    size_t tamanioBits = codigoBin.size(); // Número de bits necesarios
+    // Calcular el tamaÃ±o en bits
+    size_t tamanioBits = codigoBin.size(); // NÃºmero de bits necesarios
 
-    // Guardar el tamaño en bits en el archivo
+    // Guardar el tamaÃ±o en bits en el archivo
     archivo.write(reinterpret_cast<const char*>(&tamanioBits), sizeof(tamanioBits));
 
-    // Convertir el código binario a un vector de bytes
-    vector<uint8_t> bytes((tamanioBits + 7) / 8, 0);  // Ajustar el tamaño de bytes
+    // Convertir el cÃ³digo binario a un vector de bytes
+    vector<uint8_t> bytes((tamanioBits + 7) / 8, 0);  // Ajustar el tamaÃ±o de bytes
 
     for (size_t i = 0; i < tamanioBits; ++i) {
         size_t byteIndex = i / 8;
-        size_t bitIndex = 7 - (i % 8); // Coloca el bit en la posición correcta
+        size_t bitIndex = 7 - (i % 8); // Coloca el bit en la posiciÃ³n correcta
         if (codigoBin[i] == '1') {
             bytes[byteIndex] |= (1 << bitIndex);
         }
@@ -124,7 +125,7 @@ void Huffman::crearHuffmanTree(string texto, string nombreArchivo)
     // Escribir los bytes en el archivo
     archivo.write(reinterpret_cast<const char*>(bytes.data()), bytes.size());
 
-    // Guardar el árbol de Huffman
+    // Guardar el Ã¡rbol de Huffman
     guardarArbol(archivo, raiz);
 
     archivo.close();
@@ -159,7 +160,7 @@ void Huffman::cargarTexto(string nombreArchivoTexto) {
     //verifica si el archivo esta vacio
     archivo.seekg(0, ios::end); //seekg mueve el cursor hacia el final del archivo
     if (archivo.tellg() == 0) { //si el cursor aun se encuentra en el inicio (posicion 0) significa que el archivo esta vacio
-        cerr << "Error: El archivo de texto está vacio" << endl;
+        cerr << "Error: El archivo de texto estÃ¡ vacio" << endl;
         archivo.close();
         return;
     }
@@ -227,11 +228,11 @@ void Huffman::cargarCodificado(string nombreArchivoBinario) {
         return;
     }
 
-    // Leer el tamaño en bits que se guardó en el archivo
+    // Leer el tamaÃ±o en bits que se guardÃ³ en el archivo
     size_t tamanioBits;
     archivo.read(reinterpret_cast<char*>(&tamanioBits), sizeof(tamanioBits));
 
-    // Calcular cuántos bytes necesitamos para almacenar estos bits
+    // Calcular cuÃ¡ntos bytes necesitamos para almacenar estos bits
     size_t tamanioBytes = (tamanioBits + 7) / 8; // Redondear hacia arriba para incluir cualquier byte incompleto
 
     vector<uint8_t> bytes(tamanioBytes);
@@ -249,7 +250,7 @@ void Huffman::cargarCodificado(string nombreArchivoBinario) {
         }
     }
 
-    // Ahora tenemos más bits de los necesarios, por lo que recortamos el código binario
+    // Ahora tenemos mÃ¡s bits de los necesarios, por lo que recortamos el cÃ³digo binario
     codigoBin = codigoBin.substr(0, tamanioBits);
 
     cout << endl << "codigoBin: " << codigoBin << endl;
@@ -294,5 +295,5 @@ void Huffman::compararSizeArchivo(string textFile, string binFile) {
     cout << "\n\nEl texto original tiene un tamano de " << intTxt << " bytes";
     cout << endl << "El archivo binario tiene un tamano de " << intBin << " bytes";
 
-    cout << endl << "El radio de compresion es de " << radio << "%";
+    cout << endl << "El radio de compresion es de " << fixed << setprecision(2) << radio << "%";
 }
